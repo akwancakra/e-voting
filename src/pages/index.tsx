@@ -3,7 +3,10 @@ import Image from "next/image";
 import BgBanner from "public/static/images/landingpage.jpg";
 import BgFaq from "public/static/images/faq.svg";
 import Head from "next/head";
-// import BgAbout from "public/static/images/faq.svg";
+import LandingPageImageOne from "public/static/images/landing-page (1).png";
+import LandingPageImageTwo from "public/static/images/landing-page (2).png";
+import LandingPageImageThree from "public/static/images/landing-page (3).png";
+import LandingPageImageFour from "public/static/images/landing-page (4).png";
 
 export default function Home() {
   return (
@@ -53,7 +56,16 @@ export default function Home() {
         </section>
         <section className="container max-w-6xl mx-auto p-2 mt-12 mb-12 sm:mt-20 sm:mb-20 sm:p-4">
           <div className="sm:flex gap-4">
-            <div className="bg-gray-400 min-h-[500px] w-full rounded-3xl mb-4 sm:mb-0 sm:min-w-[390px]" />
+            <div className="relative min-h-[500px] w-full rounded-3xl mb-4 sm:mb-0 sm:min-w-[390px]">
+              <Image
+                src={LandingPageImageOne}
+                alt="About E-Voting"
+                className="object-cover w-full h-full rounded-3xl"
+                fill
+                sizes="(max-width: 768px) 100vw, 390px"
+                priority
+              />
+            </div>
             <div>
               <div className="w-fit mb-4">
                 <p className="tracking-tighter font-semibold text-xl md:text-3xl">
@@ -81,7 +93,15 @@ export default function Home() {
           <div className="mb-10 max-w-5xl mx-auto">
             {/* CONTENT 1 */}
             <div className="sm:flex sm:items-center gap-4">
-              <div className="bg-gray-400 relative min-h-[500px] w-full rounded-3xl mb-3 sm:mb-0 sm:min-w-[390px]">
+              <div className="relative min-h-[500px] w-full rounded-3xl mb-3 sm:mb-0 sm:min-w-[390px]">
+                <Image
+                  src={LandingPageImageTwo}
+                  alt="Step 1: Registration"
+                  className="object-cover w-full h-full rounded-3xl"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 390px"
+                  priority
+                />
                 <div className="absolute -top-4 -left-4 w-12 h-12 bg-pimary-dpurple rounded-xl justify-center items-center hidden sm:flex">
                   <p className="font-semibold text-xl text-white">1</p>
                 </div>
@@ -98,7 +118,16 @@ export default function Home() {
             </div>
             {/* CONTENT 2 */}
             <div className="sm:flex sm:items-center gap-4 my-4">
-              <div className="bg-gray-400 relative min-h-[500px] w-full rounded-3xl block mb-3 sm:mb-0 sm:min-w-[390px] sm:hidden">
+              {/* Mobile Image Step 2 */}
+              <div className="relative min-h-[500px] w-full rounded-3xl block mb-3 sm:mb-0 sm:min-w-[390px] sm:hidden">
+                <Image
+                  src={LandingPageImageThree}
+                  alt="Step 2: Choose Campaign"
+                  className="object-cover w-full h-full rounded-3xl"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 390px"
+                  priority
+                />
                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-pimary-dpurple rounded-xl justify-center items-center hidden sm:flex">
                   <p className="font-semibold text-xl text-white">2</p>
                 </div>
@@ -112,7 +141,16 @@ export default function Home() {
                   kandidat, dan pahami visi misi mereka.
                 </p>
               </div>
-              <div className="bg-gray-400 relative min-h-[500px] w-full rounded-3xl hidden sm:min-w-[390px] sm:block">
+              {/* Desktop Image Step 2 */}
+              <div className="relative min-h-[500px] w-full rounded-3xl hidden sm:min-w-[390px] sm:block">
+                <Image
+                  src={LandingPageImageThree}
+                  alt="Step 2: Choose Campaign"
+                  className="object-cover w-full h-full rounded-3xl"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 390px"
+                  priority
+                />
                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-pimary-dpurple rounded-xl justify-center items-center hidden sm:flex">
                   <p className="font-semibold text-xl text-white">2</p>
                 </div>
@@ -120,7 +158,15 @@ export default function Home() {
             </div>
             {/* CONTENT 3 */}
             <div className="sm:flex sm:items-center gap-4">
-              <div className="bg-gray-400 relative min-h-[500px] w-full rounded-3xl mb-3 sm:mb-0 sm:min-w-[390px]">
+              <div className="relative min-h-[500px] w-full rounded-3xl mb-3 sm:mb-0 sm:min-w-[390px]">
+                <Image
+                  src={LandingPageImageFour}
+                  alt="Step 3: Vote"
+                  className="object-cover w-full h-full rounded-3xl"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 390px"
+                  priority
+                />
                 <div className="absolute -top-4 -left-4 w-12 h-12 bg-pimary-dpurple rounded-xl justify-center items-center hidden sm:flex">
                   <p className="font-semibold text-xl text-white">3</p>
                 </div>
