@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               Int                @id @default(autoincrement())
+  email            String             @unique
+  name             String
+  password         String?
+  role             String             @default("VOTER")
+  photo            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime?          @updatedAt
+  userVoteCampaign UserVoteCampaign[]
+}
+
+model Campaign {
+  id               Int                @id @default(autoincrement())
+  title            String
+  description      String
+  banner           String?
+  finished         Boolean            @default(false)
+  expiredAt        DateTime
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime?          @updatedAt
+  winner_candidate Int? // CANDIDATE ID
+  rules            Rule[]
+  candidates       Candidate[]
+  notifs           Notif[]
+  userVoteCampaign UserVoteCampaign[]
+  allowedEmails    AllowedEmail[]
+}
+
+model AllowedEmail {
+  id         Int       @id @default(autoincrement())
+  email      String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+  Campaign   Campaign  @relation(fields: [campaignId], references: [id])
+  campaignId Int
+}
+
+model Rule {
+  id          Int       @id @default(autoincrement())
+  icon        String
+  description String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  Campaign    Campaign  @relation(fields: [campaignId], references: [id])
+  campaignId  Int
+}
+
+model Notif {
+  id          Int       @id @default(autoincrement())
+  icon        String
+  title       String
+  photo       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  Campaign    Campaign  @relation(fields: [campaignId], references: [id])
+  campaignId  Int
+}
+
+model Candidate {
+  id               Int                @id @default(autoincrement())
+  number           Int                @default(1)
+  chief_name       String
+  chief_instagram  String
+  vice_name        String
+  vice_instagram   String
+  description      String
+  visi             String
+  misi             String
+  program          String
+  banner           String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime?          @updatedAt
+  Campaign         Campaign           @relation(fields: [campaignId], references: [id])
+  campaignId       Int
+  UserVoteCampaign UserVoteCampaign[]
+}
+
+model UserVoteCampaign {
+  id              Int       @id @default(autoincrement())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @updatedAt
+  campaign        Campaign  @relation(fields: [campaignId], references: [id])
+  campaignId      Int
+  candidate       Candidate @relation(fields: [candidateId], references: [id])
+  candidateId     Int
+  user            User      @relation(fields: [userId], references: [id])
+  userId          Int
+}

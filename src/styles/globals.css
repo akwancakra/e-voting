@@ -2,26 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+@screen sm {
+    .sm\:grid-cols-1 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .sm\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sm\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+.sidebar-admin {
+    @apply fixed h-full w-[78px] z-[99] transition-all duration-[0.5s] ease-[ease] px-3.5 py-1.5 left-0 top-0;
+    background: #11101d;
 }
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+.sidebar-admin.open {
+    @apply w-[250px];
+}
+.sidebar-admin .logo-details {
+    @apply h-[60px] flex items-center relative;
+}
+.sidebar-admin .logo-details .icon {
+    @apply opacity-0 transition-all duration-[0.5s] ease-[ease];
+}
+.sidebar-admin.open .logo-details .icon {
+    @apply opacity-100;
+}
+.sidebar-admin .logo-details #btn {
+    @apply absolute -translate-y-2/4 text-[22px] transition-all duration-[0.4s] ease-in-out text-center cursor-pointer right-0 top-2/4;
+}
+.sidebar-admin.open .logo-details #btn {
+    @apply text-right;
+}
+.sidebar-admin i {
+    @apply text-white h-[60px] min-w-[50px] text-[28px] text-center leading-[60px];
+}
+.sidebar-admin .nav-list {
+    @apply h-full mt-5;
+}
+.sidebar-admin li {
+    @apply relative mx-0 my-2;
+    list-style: none;
+}
+.sidebar-admin li .tooltip {
+    @apply absolute z-[3] shadow-[0_5px_10px_rgba(0,0,0,0.3)] rounded text-[15px] font-normal opacity-0 whitespace-nowrap pointer-events-none transition-[0s] px-3 py-1.5 left-[calc(100%_+_15px)] -top-5;
+    background: #fff;
+}
+.sidebar-admin li:hover .tooltip {
+    @apply opacity-100 pointer-events-auto transition-all duration-[0.4s] ease-[ease] -translate-y-2/4 top-2/4;
+}
+.sidebar-admin.open li .tooltip {
+    @apply hidden;
+}
+.sidebar-admin input {
+    @apply text-[15px] text-white font-normal h-[50px] w-full w-[50px] transition-all duration-[0.5s] ease-[ease] rounded-xl border-[none];
+    outline: none;
+    background: #1d1b31;
+}
+.sidebar-admin li a {
+    @apply flex h-full w-full items-center no-underline transition-all duration-[0.4s] ease-[ease] rounded-xl;
+    background: #11101d;
+}
+.sidebar-admin li a:hover {
+    background: #fff;
+}
+.sidebar-admin li a .links_name {
+    @apply text-white text-[15px] font-normal whitespace-nowrap opacity-0 pointer-events-none transition-[0.4s];
+}
+.sidebar-admin.open li a .links_name {
+    @apply opacity-100 pointer-events-auto;
+}
+.sidebar-admin li a:hover .links_name,
+.sidebar-admin li a:hover i {
+    @apply transition-all duration-[0.5s] ease-[ease] text-[#11101D];
+}
+.sidebar-admin li.active a .links_name,
+.sidebar-admin li.active a i {
+    @apply text-[#11101D];
+}
+.sidebar-admin li.active a {
+    background: #fff;
+}
+.sidebar-admin li.active a {
+    background: #fff;
+}
+.sidebar-admin li i {
+    @apply h-[50px] leading-[50px] text-lg rounded-xl;
+}
+.sidebar-admin li.profile {
+    @apply fixed h-[60px] w-[78px] transition-all duration-[0.5s] ease-[ease] overflow-hidden px-3.5 py-2.5 left-0 -bottom-2;
+    background: #1d1b31;
+}
+.sidebar-admin.open li.profile {
+    @apply w-[250px];
+}
+.sidebar-admin li .profile-details {
+    @apply flex items-center flex-nowrap;
+}
+.sidebar-admin li img {
+    @apply h-[45px] w-[45px] object-cover mr-2.5 rounded-md;
+}
+.sidebar-admin li.profile .name,
+.sidebar-admin li.profile .job {
+    @apply text-[15px] font-normal text-white whitespace-nowrap;
+}
+.sidebar-admin li.profile .job {
+    @apply text-xs;
+}
+.sidebar-admin .profile #log_out {
+    @apply absolute -translate-y-2/4 w-full h-[60px] leading-[60px] transition-all duration-[0.5s] ease-[ease] rounded-none right-0 top-2/4;
+    background: #1d1b31;
+}
+.sidebar-admin.open .profile #log_out {
+    @apply w-[50px];
+    background: none;
+}
+@media (max-width: 420px) {
+    .sidebar-admin li .tooltip {
+        @apply hidden;
+    }
 }
