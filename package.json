@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "seed:all": "prisma db seed",
+    "db:push": "prisma db push",
+    "db:setup": "prisma db push && prisma db seed",
+    "db:reset": "prisma db push --force-reset && prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^5.8.1",

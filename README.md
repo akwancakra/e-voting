@@ -2,16 +2,46 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js (v18 or higher)
+- MySQL database server
+- npm or yarn
+
+### Setup
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd e-voting
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Environment Setup**
+```bash
+# Copy environment file
+cp env.example .env
+
+# Edit .env file with your database credentials
+# Update DATABASE_URL and other required variables
+```
+
+4. **Database Setup**
+```bash
+# Push schema to database
+npx prisma db push
+
+# Run seeder to populate with sample data
+npm run seed:all
+```
+
+5. **Start development server**
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -23,6 +53,51 @@ You can start editing the page by modifying `pages/index.tsx`. The page auto-upd
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+
+## Database Setup
+
+### Running Seeders
+
+To populate the database with sample data, run:
+
+```bash
+# Setup database and seed data in one command
+npm run db:setup
+
+# Or run separately
+npm run db:push    # Push schema to database
+npm run seed:all   # Seed sample data
+npm run seed       # Alternative seed command
+
+# Reset database (WARNING: This will delete all data)
+npm run db:reset
+```
+
+### Default Credentials
+
+After running the seeder, you can login with these default accounts:
+
+**Admin Account:**
+- Email: `admin@evoting.com`
+- Password: `admin123`
+
+**Voter Accounts:**
+- Email: `voter1@evoting.com`
+- Password: `voter123`
+- Email: `voter2@evoting.com`
+- Password: `voter456`
+
+### Database Schema
+
+The application uses Prisma ORM with MySQL database. Key models include:
+
+- **User**: Admin and voter accounts
+- **Campaign**: Voting campaigns/elections
+- **Candidate**: Candidates for each campaign
+- **UserVoteCampaign**: Vote records
+- **Rule**: Campaign rules
+- **Notif**: Campaign notifications
+- **AllowedEmail**: Email restrictions for campaigns
 
 ## Learn More
 

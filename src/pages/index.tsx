@@ -28,21 +28,21 @@ export default function Home() {
           <div className="text-center absolute inset-0 flex flex-col justify-end items-center mb-6">
             <div className="mb-2">
               <p className="text-white font-monument text-2xl md:text-4xl">
-                Time To Vote
+                Suara Anda, Masa Depan Kita
               </p>
             </div>
-            <p className="text-white mb-3">
-              E-Voting adalah platform pemilihan digital yang aman, transparan,
-              dan mudah digunakan untuk berbagai kebutuhan pemilihan seperti
-              OSIS, BEM, organisasi, dan lainnya. Dukung demokrasi digital
-              bersama kami!
+            <p className="text-white mb-3 max-w-2xl mx-auto px-4">
+              Platform E-Voting terdepan yang menghadirkan pengalaman pemilihan
+              digital yang aman, transparan, dan mudah diakses. Dari pemilihan
+              OSIS hingga BEM, kami mendukung demokrasi digital yang inklusif
+              dan terpercaya.
             </p>
             <div className="flex justify-center items-center gap-2">
               <Link
                 href={"/campaigns"}
-                className="btn btn-primary text-white py-2 px-3 text-sm h-fit min-h-fit"
+                className="btn btn-primary text-white py-2 px-6 text-sm h-fit min-h-fit hover:scale-105 transition-transform"
               >
-                View Campaign
+                Jelajahi Kampanye
               </Link>
             </div>
           </div>
@@ -50,7 +50,10 @@ export default function Home() {
         <section className="container max-w-6xl mx-auto p-2 mt-12 mb-12 sm:mt-20 sm:mb-20 sm:p-4">
           <div className="bg-pimary-dpurple rounded-3xl px-10 py-14 sm:py-20">
             <p className="font-monument text-center text-white text-3xl sm:text-5xl md:text-7xl">
-              &quot;Suaramu hakmu&quot;
+              &quot;Setiap Suara Berarti&quot;
+            </p>
+            <p className="text-center text-white/80 mt-4 text-lg">
+              Membangun masa depan demokratis, satu suara pada satu waktu
             </p>
           </div>
         </section>
@@ -69,26 +72,39 @@ export default function Home() {
             <div>
               <div className="w-fit mb-4">
                 <p className="tracking-tighter font-semibold text-xl md:text-3xl">
-                  About Us
+                  Tentang Kami
                 </p>
                 <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full" />
               </div>
-              <p>
-                E-Voting adalah aplikasi voting online yang dikembangkan untuk
-                memudahkan proses pemilihan secara digital. Kami berkomitmen
-                menghadirkan sistem yang transparan, aman, dan mudah digunakan
-                oleh siapa saja, baik untuk organisasi, sekolah, maupun
-                komunitas.
+              <p className="text-gray-700 leading-relaxed">
+                E-Voting adalah platform pemilihan digital revolusioner yang
+                dirancang untuk mengubah cara kita berpartisipasi dalam proses
+                demokrasi. Dengan teknologi blockchain dan enkripsi tingkat
+                tinggi, kami menjamin keamanan dan transparansi setiap suara
+                yang diberikan. Platform kami cocok untuk berbagai skala
+                pemilihan, dari organisasi kecil hingga institusi besar.
               </p>
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="font-bold text-2xl text-violet-600">100%</p>
+                  <p className="text-sm text-gray-600">Aman & Terpercaya</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-2xl text-violet-600">24/7</p>
+                  <p className="text-sm text-gray-600">Dukungan Tersedia</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
         <section className="container max-w-6xl mx-auto p-2 mt-12 mb-12 sm:mt-20 sm:mb-20 sm:p-4">
           <div className="text-center mb-8">
             <p className="tracking-tighter font-semibold text-xl md:text-3xl">
-              How To Use
+              Cara Menggunakan
             </p>
-            <p>Ikuti langkah berikut untuk mulai menggunakan E-Voting:</p>
+            <p className="text-gray-600">
+              Proses sederhana untuk memulai perjalanan demokrasi digital Anda
+            </p>
           </div>
           <div className="mb-10 max-w-5xl mx-auto">
             {/* CONTENT 1 */}
@@ -107,12 +123,14 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <p className="tracking-tighter font-semibold text-lg md:text-2xl">
-                  Step 1:
+                <p className="tracking-tighter font-semibold text-lg md:text-2xl text-violet-600">
+                  Langkah 1: Registrasi & Verifikasi
                 </p>
-                <p>
-                  Step 1: Daftar akun dan login ke aplikasi E-Voting menggunakan
-                  email yang valid.
+                <p className="text-gray-700 leading-relaxed">
+                  Buat akun dengan email yang valid dan verifikasi identitas
+                  Anda. Proses ini memastikan keamanan dan mencegah duplikasi
+                  suara. Data pribadi Anda dilindungi dengan standar keamanan
+                  tertinggi.
                 </p>
               </div>
             </div>
@@ -133,12 +151,14 @@ export default function Home() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="tracking-tighter font-semibold text-lg md:text-2xl">
-                  Step 2:
+                <p className="tracking-tighter font-semibold text-lg md:text-2xl text-violet-600">
+                  Langkah 2: Pilih Kampanye
                 </p>
-                <p>
-                  Step 2: Pilih campaign yang sedang berlangsung, baca detail
-                  kandidat, dan pahami visi misi mereka.
+                <p className="text-gray-700 leading-relaxed">
+                  Jelajahi berbagai kampanye yang sedang berlangsung. Pelajari
+                  visi, misi, dan program kerja setiap kandidat. Kami
+                  menyediakan informasi lengkap untuk membantu Anda membuat
+                  keputusan yang tepat.
                 </p>
               </div>
               {/* Desktop Image Step 2 */}
@@ -172,12 +192,13 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <p className="tracking-tighter font-semibold text-lg md:text-2xl">
-                  Step 3:
+                <p className="tracking-tighter font-semibold text-lg md:text-2xl text-violet-600">
+                  Langkah 3: Berikan Suara Anda
                 </p>
-                <p>
-                  Step 3: Lakukan voting pada kandidat pilihanmu. Hasil voting
-                  dapat dipantau secara real-time!
+                <p className="text-gray-700 leading-relaxed">
+                  Lakukan voting dengan mudah dan aman. Setiap suara Anda
+                  terenkripsi dan tersimpan dengan aman. Pantau hasil pemilihan
+                  secara real-time dan saksikan demokrasi digital dalam aksi!
                 </p>
               </div>
             </div>
@@ -187,13 +208,15 @@ export default function Home() {
           <div>
             <div className="text-center mb-10">
               <p className="tracking-tighter font-semibold text-xl md:text-3xl">
-                FAQ
+                Pertanyaan Umum
               </p>
-              <p>Berikut beberapa pertanyaan yang sering ditanyakan:</p>
+              <p className="text-gray-600">
+                Temukan jawaban untuk pertanyaan yang sering diajukan
+              </p>
             </div>
             <div className="sm:grid grid-cols-2 items-center">
               <div className="max-w-xl w-full lg:min-w-[500px] mx-auto">
-                <div className="collapse collapse-arrow">
+                <div className="collapse collapse-arrow bg-white shadow-sm border border-gray-100 rounded-lg mb-4">
                   <label htmlFor="faq-1" className="hidden">
                     FAQ 1
                   </label>
@@ -203,48 +226,70 @@ export default function Home() {
                     id="faq-1"
                     defaultChecked={true}
                   />
-                  <div className="collapse-title font-semibold">
-                    <p>Apa itu E-Voting?</p>
+                  <div className="collapse-title font-semibold text-gray-800">
+                    <p>Apa itu E-Voting dan mengapa harus menggunakannya?</p>
                   </div>
                   <div className="collapse-content !pb-1">
-                    <p>
-                      E-Voting adalah aplikasi voting online yang memudahkan
-                      proses pemilihan secara digital dan transparan.
+                    <p className="text-gray-600 leading-relaxed">
+                      E-Voting adalah platform pemilihan digital yang
+                      menghadirkan kemudahan, keamanan, dan transparansi dalam
+                      proses voting. Dengan teknologi terkini, kami memastikan
+                      setiap suara terhitung dengan akurat dan aman dari
+                      manipulasi.
                     </p>
                   </div>
-                  <div className="divider my-0" />
                 </div>
-                <div className="collapse collapse-arrow">
+                <div className="collapse collapse-arrow bg-white shadow-sm border border-gray-100 rounded-lg mb-4">
                   <label htmlFor="faq-2" className="hidden">
                     FAQ 2
                   </label>
                   <input type="checkbox" name="faq-2" id="faq-2" />
-                  <div className="collapse-title font-semibold">
-                    <p>Bagaimana cara mengikuti voting?</p>
+                  <div className="collapse-title font-semibold text-gray-800">
+                    <p>Bagaimana proses keamanan data pengguna?</p>
                   </div>
                   <div className="collapse-content !pb-1">
-                    <p>
-                      Daftar akun, login, pilih campaign, dan lakukan voting
-                      pada kandidat pilihanmu.
+                    <p className="text-gray-600 leading-relaxed">
+                      Kami menggunakan enkripsi end-to-end dan teknologi
+                      blockchain untuk melindungi data pengguna. Setiap
+                      transaksi voting tercatat secara permanen dan tidak dapat
+                      diubah, menjamin integritas hasil pemilihan.
                     </p>
                   </div>
-                  <div className="divider my-0" />
                 </div>
-                <div className="collapse collapse-arrow">
+                <div className="collapse collapse-arrow bg-white shadow-sm border border-gray-100 rounded-lg mb-4">
                   <label htmlFor="faq-3" className="hidden">
                     FAQ 3
                   </label>
                   <input type="checkbox" name="faq-3" id="faq-3" />
-                  <div className="collapse-title font-semibold">
-                    <p>Apakah data saya aman?</p>
-                  </div>
-                  <div className="collapse-content !pb-1">
+                  <div className="collapse-title font-semibold text-gray-800">
                     <p>
-                      Ya, data pengguna dan hasil voting dijamin keamanannya
-                      dengan sistem enkripsi dan audit log.
+                      Apakah saya bisa melihat hasil voting secara real-time?
                     </p>
                   </div>
-                  <div className="divider my-0" />
+                  <div className="collapse-content !pb-1">
+                    <p className="text-gray-600 leading-relaxed">
+                      Ya! Platform kami menyediakan dashboard real-time yang
+                      menampilkan hasil voting secara langsung. Anda dapat
+                      memantau perkembangan pemilihan kapan saja dan di mana
+                      saja.
+                    </p>
+                  </div>
+                </div>
+                <div className="collapse collapse-arrow bg-white shadow-sm border border-gray-100 rounded-lg mb-4">
+                  <label htmlFor="faq-4" className="hidden">
+                    FAQ 4
+                  </label>
+                  <input type="checkbox" name="faq-4" id="faq-4" />
+                  <div className="collapse-title font-semibold text-gray-800">
+                    <p>Bagaimana jika terjadi masalah teknis saat voting?</p>
+                  </div>
+                  <div className="collapse-content !pb-1">
+                    <p className="text-gray-600 leading-relaxed">
+                      Tim dukungan kami siap membantu 24/7. Jika terjadi masalah
+                      teknis, voting Anda akan disimpan secara otomatis dan
+                      dapat dilanjutkan setelah masalah teratasi.
+                    </p>
+                  </div>
                 </div>
               </div>
               {/* IMAGE FAQ */}

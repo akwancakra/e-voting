@@ -1,4 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -11,12 +13,17 @@ async function main() {
   await prisma.campaign.deleteMany();
   await prisma.user.deleteMany();
 
+  // Hash passwords
+  const adminPassword = await bcrypt.hash("admin123", 10);
+  const voter1Password = await bcrypt.hash("voter123", 10);
+  const voter2Password = await bcrypt.hash("voter456", 10);
+
   // Users
   const admin = await prisma.user.create({
     data: {
       email: "admin@evoting.com",
       name: "Admin E-Voting",
-      password: "$2a$10$sqwHHn8zRUjI7uKuIOAayeBzjbOwpQY1cveGy1pad5mwaGPyMqelq", // hash dummy
+      password: adminPassword,
       role: "ADMIN",
       photo: null,
     },
@@ -25,7 +32,7 @@ async function main() {
     data: {
       email: "voter1@evoting.com",
       name: "Voter Satu",
-      password: "$2a$10$TrWFxFh2CKqHJQ2//unHlO1ly8jQLVlLao3SZcAEjgRRiByWjeLc2",
+      password: voter1Password,
       role: "VOTER",
       photo: null,
     },
@@ -34,7 +41,7 @@ async function main() {
     data: {
       email: "voter2@evoting.com",
       name: "Voter Dua",
-      password: "$2a$10$WM.j7flVzQn2M3sEyb1j6OwiHxB1zomLNskwrSzACst5hYmKWMhAW",
+      password: voter2Password,
       role: "VOTER",
       photo: null,
     },
@@ -46,7 +53,7 @@ async function main() {
       title: "Pemilihan Ketua OSIS 2024",
       description: "Pilih ketua OSIS terbaik untuk masa depan sekolah!",
       banner: null,
-      expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 hari ke depan
+      expiredAt: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000), // 31 hari ke depan
       finished: false,
       rules: {
         create: [
@@ -132,7 +139,7 @@ async function main() {
       title: "Pemilihan Ketua BEM 2024",
       description: "Ayo pilih ketua BEM yang akan membawa perubahan!",
       banner: null,
-      expiredAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 hari ke depan
+      expiredAt: new Date(Date.now() + 62 * 24 * 60 * 60 * 1000), // 62 hari ke depan
       finished: false,
       rules: {
         create: [
@@ -168,6 +175,12 @@ async function main() {
       },
     },
   });
+
+  console.log("Database seeded successfully!");
+  console.log("Default accounts created:");
+  console.log("Admin: admin@evoting.com / admin123");
+  console.log("Voter 1: voter1@evoting.com / voter123");
+  console.log("Voter 2: voter2@evoting.com / voter456");
 }
 
 main()

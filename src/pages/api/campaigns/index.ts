@@ -92,7 +92,8 @@ export default async function handler(
       });
     } else {
       // GET LIST CAMPAIGNS AND WINNER CANDIDATE
-      data = await getCampaigns({});
+      // Default: kembalikan semua campaign tanpa filter aktif
+      data = await getCampaigns({ getAll: true, active: false });
     }
 
     res.status(200).json({ status: true, statusCode: 200, campaigns: data });
