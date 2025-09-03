@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^5.8.1",
@@ -29,7 +30,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/lodash": "^4.14.202",
-    "@types/node": "^20",
+    "@types/node": "^20.19.1",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10",
@@ -38,6 +39,10 @@
     "postcss": "^8",
     "prisma": "^5.8.1",
     "tailwindcss": "^3",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

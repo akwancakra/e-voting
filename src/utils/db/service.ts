@@ -2,7 +2,6 @@ import { AllowedEmail } from "@/types/allowedEmail.types";
 import { Campaign } from "@/types/campaign.type";
 import { Candidate } from "@/types/candidate.types";
 import { PrismaClient } from "@prisma/client";
-import supabase from "./supabase";
 import { UserVoteCampaign } from "@/types/userVoteCampaign.types";
 import { Notif } from "@/types/notif.types";
 
@@ -10,13 +9,13 @@ const prisma = new PrismaClient();
 
 //? AUTH HERE
 export async function signIn(userData: { email: string }) {
-    const user = await prisma.user.findFirst({
-        where: {
-            email: userData.email,
-        },
-    });
+  const user = await prisma.user.findFirst({
+    where: {
+      email: userData.email,
+    },
+  });
 
-    return user || null;
+  return user || null;
 }
 
 /**
@@ -26,91 +25,97 @@ export async function signIn(userData: { email: string }) {
  * @param {any} callback - callback function to handle the result
  */
 export async function signInWithGoogle(userData: any, callback: any) {
-    const existingUser = await prisma.user.findFirst({
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      email: userData.email,
+    },
+  });
+
+  if (existingUser) {
+    userData.role = existingUser.role;
+
+    try {
+      await prisma.user.update({
         where: {
-            email: userData.email,
+          id: existingUser.id,
         },
-    });
+        data: {
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+          photo: userData.image,
+        },
+      });
 
-    if (existingUser) {
-        userData.role = existingUser.role;
-
-        try {
-            await prisma.user.update({
-                where: {
-                    id: existingUser.id,
-                },
-                data: {
-                    email: userData.email,
-                    name: userData.name,
-                    role: userData.role,
-                    photo: userData.image,
-                },
-            });
-
-            callback({
-                status: true,
-                message: "Sign In with Google Success!",
-                data: userData,
-            });
-        } catch (err) {
-            callback({ status: false, message: "Sign In with Google failed!" });
-        }
-    } else {
-        userData.role = "VOTER";
-
-        try {
-            await prisma.user.create({
-                data: {
-                    email: userData.email,
-                    name: userData.name,
-                    role: userData.role,
-                    photo: userData.image,
-                },
-            });
-
-            callback({
-                status: true,
-                message: "Sign In with Google Success!",
-                data: userData,
-            });
-        } catch (err) {
-            callback({ status: false, message: "Sign In with Google failed!" });
-        }
+      callback({
+        status: true,
+        message: "Sign In with Google Success!",
+        data: userData,
+      });
+    } catch (err) {
+      callback({ status: false, message: "Sign In with Google failed!" });
     }
+  } else {
+    userData.role = "VOTER";
+
+    try {
+      await prisma.user.create({
+        data: {
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+          photo: userData.image,
+        },
+      });
+
+      callback({
+        status: true,
+        message: "Sign In with Google Success!",
+        data: userData,
+      });
+    } catch (err) {
+      callback({ status: false, message: "Sign In with Google failed!" });
+    }
+  }
 }
 
 //? CAMPAIGNS HERE
 export async function getCampaigns({
-    keyword = "",
-    active = true,
-    limit = 5,
-    getAll = false,
-    skip = 0,
+  keyword = "",
+  active = true,
+  limit = 5,
+  getAll = false,
+  skip = 0,
 }: {
-    keyword?: string;
-    active?: boolean;
-    limit?: number;
-    getAll?: boolean;
-    skip?: number;
+  keyword?: string;
+  active?: boolean;
+  limit?: number;
+  getAll?: boolean;
+  skip?: number;
 }) {
+  try {
     const currentDate = new Date();
-
-    const { data: campaigns, error } = await supabase.rpc("get_campaigns", {
-        keyword,
-        active,
-        currentdate: currentDate.toISOString(),
-        skip,
-        limitdata: limit,
-        getAll,
+    // Query campaign dari database menggunakan Prisma
+    const where: any = {
+      ...(keyword && { title: { contains: keyword, mode: "insensitive" } }),
+      ...(active && { expiredAt: { gte: currentDate } }),
+    };
+    const campaigns = await prisma.campaign.findMany({
+      where,
+      skip,
+      take: getAll ? undefined : limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        candidates: true,
+        allowedEmails: true,
+        rules: true,
+      },
     });
-
-    if (error) {
-        console.error("Error fetching campaigns:", error.message);
-        return { campaigns: [], totalCampaigns: 0 };
-    }
-
-    return { campaigns, totalCampaigns: campaigns?.length || 0 };
+    return { campaigns, totalCampaigns: campaigns.length };
+  } catch (error) {
+    console.error("Error in getCampaigns:", error);
+    return { campaigns: [], totalCampaigns: 0 };
+  }
 }
 
 /**
@@ -120,144 +125,151 @@ export async function getCampaigns({
  * @return {Object} The campaign with candidate votes and notifications
  */
 export async function getCampaignById({ id = 0 }: { id?: number }) {
-    const { data: campaign, error }: any = await supabase
-        .from("Campaign")
-        .select(
-            `
-            *,
-            rules:Rule(*),
-            allowedEmails:AllowedEmail(*),
-            candidates:Candidate(*),
-            notifs:Notif(*).limit(5),
-            userVoteCampaign:UserVoteCampaign(*)
-        `
-        )
-        .eq("id", id)
-        .single();
+  try {
+    const campaign = await prisma.campaign.findUnique({
+      where: { id },
+      include: {
+        rules: true,
+        allowedEmails: true,
+        candidates: true,
+        notifs: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+        userVoteCampaign: true,
+      },
+    });
+    if (!campaign) return null;
 
-    // Handle error
-    if (error) {
-        console.error("Error fetching campaign:", error);
-        return null; // atau throw error sesuai kebutuhan
-    }
-
+    // Mapping agar sesuai type
+    const candidates = (campaign.candidates as any[]).map((c) => ({
+      ...c,
+      createdAt: c.createdAt?.toString() ?? "",
+      updatedAt: c.updatedAt?.toString() ?? undefined,
+      campaign: campaign,
+      userVoteCampaign: [], // relasi ini bisa diisi jika perlu
+    }));
+    const userVoteCampaigns = (campaign.userVoteCampaign as any[]).map((v) => ({
+      ...v,
+      createdAt: v.createdAt?.toString() ?? "",
+      updatedAt: v.updatedAt?.toString() ?? undefined,
+      campaign: campaign,
+      candidate: candidates.find((c) => c.id === v.candidateId),
+      user: undefined, // relasi user bisa diisi jika perlu
+    }));
+    const notifs = (campaign.notifs as any[]).map((n) => ({
+      ...n,
+      createdAt: n.createdAt?.toString() ?? "",
+      updatedAt: n.updatedAt?.toString() ?? undefined,
+      campaign: campaign,
+    }));
+    // Hitung suara kandidat
+    const candidateVotes: Record<
+      number,
+      { totalVotes: number; percentage: number }
+    > = {};
+    candidates.forEach((candidate) => {
+      const candidateId = candidate.id;
+      candidateVotes[candidateId] = { totalVotes: 0, percentage: 0 };
+    });
     let totalVotes = 0;
-    if (campaign) {
-        const candidateVotes: Record<
-            number,
-            { totalVotes: number; percentage: number }
-        > = {};
-
-        // Inisialisasi dengan seluruh kandidat dan nilai awal 0 jika belum ada
-        campaign?.candidates?.forEach((candidate: Candidate) => {
-            const candidateId = candidate.id;
-            candidateVotes[candidateId] = {
-                totalVotes: 0,
-                percentage: 0,
-            };
-        });
-
-        // Hitung total suara dan persentase
-        campaign?.userVoteCampaign?.forEach((vote: UserVoteCampaign) => {
-            const candidateId = vote.candidateId;
-            candidateVotes[candidateId].totalVotes++;
-            totalVotes++;
-        });
-
-        // Hitung persentase untuk setiap kandidat
-        for (const candidateId in candidateVotes) {
-            const votes = candidateVotes[candidateId].totalVotes;
-            const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-            candidateVotes[candidateId].percentage = percentage;
-        }
-
-        // Mengelompokkan notifikasi berdasarkan tanggal
-        const notifsByDate: Record<string, any[]> = {};
-        // Urutkan notifikasi berdasarkan createdAt yang terbaru
-        const sortedNotifsData = campaign?.notifs?.sort(
-            (a: Notif, b: Notif) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-        );
-
-        sortedNotifsData.forEach((notif: Notif) => {
-            const dateKey = new Date(notif.createdAt)
-                .toISOString()
-                .split("T")[0];
-            notifsByDate[dateKey] = notifsByDate[dateKey] || [];
-            notifsByDate[dateKey].push(notif);
-        });
-
-        const campaignWithCandidateVotes = {
-            ...campaign,
-            notifsGroupedByDate: notifsByDate,
-            result: candidateVotes,
-            totalVotes: totalVotes,
-        };
-
-        return campaignWithCandidateVotes;
+    userVoteCampaigns.forEach((vote) => {
+      const candidateId = vote.candidateId;
+      if (candidateVotes[candidateId]) {
+        candidateVotes[candidateId].totalVotes++;
+        totalVotes++;
+      }
+    });
+    for (const candidateId in candidateVotes) {
+      const votes = candidateVotes[candidateId].totalVotes;
+      candidateVotes[candidateId].percentage =
+        totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
     }
-    throw new Error("Campaign not found");
+    // Notif group by date
+    const notifsByDate: Record<string, any[]> = {};
+    const sortedNotifsData = notifs.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    sortedNotifsData.forEach((notif) => {
+      const dateKey = new Date(notif.createdAt).toISOString().split("T")[0];
+      notifsByDate[dateKey] = notifsByDate[dateKey] || [];
+      notifsByDate[dateKey].push(notif);
+    });
+    const campaignWithCandidateVotes = {
+      ...campaign,
+      candidates,
+      userVoteCampaign: userVoteCampaigns,
+      notifs,
+      notifsGroupedByDate: notifsByDate,
+      result: candidateVotes,
+      totalVotes: totalVotes,
+    };
+    return campaignWithCandidateVotes;
+  } catch (error) {
+    console.error("Error in getCampaignById:", error);
+    return null;
+  }
 }
 //? CAMPAIGNS HERE
 
 //* CUD CAMPAIGN
 export async function createCampaign(campaignData: any, callback: Function) {
-    let transactionResult: any;
-    const todayDate = new Date().toISOString();
-    try {
-        // Memulai transaksi Prisma
-        await prisma.$transaction(async (prismaTransaction) => {
-            // Membuat kampanye dan mendapatkan ID
-            transactionResult = await prismaTransaction.campaign.create({
-                data: {
-                    title: campaignData.title,
-                    description: campaignData.description,
-                    expiredAt: campaignData.expiredAt,
-                    createdAt: todayDate,
-                },
-                select: { id: true },
-            });
+  let transactionResult: any;
+  const todayDate = new Date().toISOString();
+  try {
+    // Memulai transaksi Prisma
+    await prisma.$transaction(async (prismaTransaction) => {
+      // Membuat kampanye dan mendapatkan ID
+      transactionResult = await prismaTransaction.campaign.create({
+        data: {
+          title: campaignData.title,
+          description: campaignData.description,
+          expiredAt: campaignData.expiredAt,
+          createdAt: todayDate,
+        },
+        select: { id: true },
+      });
 
-            // Membuat kandidat
-            await prismaTransaction.candidate.createMany({
-                data: campaignData.candidates.map((candidate: any) => ({
-                    number: candidate.number,
-                    chief_name: candidate.chief_name,
-                    chief_instagram: candidate.chief_instagram,
-                    vice_name: candidate.vice_name,
-                    vice_instagram: candidate.vice_instagram,
-                    description: candidate.description,
-                    visi: candidate.visi,
-                    misi: candidate.misi,
-                    program: candidate.program,
-                    createdAt: todayDate,
-                    campaignId: transactionResult.id,
-                })),
-            });
+      // Membuat kandidat
+      await prismaTransaction.candidate.createMany({
+        data: campaignData.candidates.map((candidate: any) => ({
+          number: candidate.number,
+          chief_name: candidate.chief_name,
+          chief_instagram: candidate.chief_instagram,
+          vice_name: candidate.vice_name,
+          vice_instagram: candidate.vice_instagram,
+          description: candidate.description,
+          visi: candidate.visi,
+          misi: candidate.misi,
+          program: candidate.program,
+          createdAt: todayDate,
+          campaignId: transactionResult.id,
+        })),
+      });
 
-            // Membuat email yang diizinkan
-            await prismaTransaction.allowedEmail.createMany({
-                data: campaignData.allowedEmails.map((email: any) => ({
-                    email: email.email,
-                    createdAt: todayDate,
-                    campaignId: transactionResult.id,
-                })),
-            });
-        });
+      // Membuat email yang diizinkan
+      await prismaTransaction.allowedEmail.createMany({
+        data: campaignData.allowedEmails.map((email: any) => ({
+          email: email.email,
+          createdAt: todayDate,
+          campaignId: transactionResult.id,
+        })),
+      });
+    });
 
-        // Transaksi berhasil
-        const campaignId = transactionResult.id;
-        callback({
-            status: true,
-            message: "Campaign and related entities created successfully.",
-            data: { campaignId },
-        });
-    } catch (error) {
-        // Rollback dilakukan otomatis oleh Prisma dalam kasus kesalahan
-        console.error("Error creating campaign and related entities:", error);
-        callback({ status: false, message: error });
-    }
+    // Transaksi berhasil
+    const campaignId = transactionResult.id;
+    callback({
+      status: true,
+      message: "Campaign and related entities created successfully.",
+      data: { campaignId },
+    });
+  } catch (error) {
+    // Rollback dilakukan otomatis oleh Prisma dalam kasus kesalahan
+    console.error("Error creating campaign and related entities:", error);
+    callback({ status: false, message: error });
+  }
 }
 
 /**
@@ -269,178 +281,175 @@ export async function createCampaign(campaignData: any, callback: Function) {
  * @return {Promise<void>} A promise that resolves after the campaign is edited.
  */
 export async function editCampaign({
-    id = 0,
-    campaignData = {},
-    callback = () => {},
+  id = 0,
+  campaignData = {},
+  callback = () => {},
 }: {
-    id: number;
-    campaignData: any;
-    callback: Function;
+  id: number;
+  campaignData: any;
+  callback: Function;
 }) {
-    let transactionResult: any;
-    const todayDate = new Date().toISOString();
+  let transactionResult: any;
+  const todayDate = new Date().toISOString();
 
-    try {
-        const campaign = await prisma.campaign.findFirst({
-            where: {
-                id: id || undefined,
-            },
-        });
+  try {
+    const campaign = await prisma.campaign.findFirst({
+      where: {
+        id: id || undefined,
+      },
+    });
 
-        if (!campaign) {
-            // Handle case when campaign is not found
-            throw new Error("Campaign not found");
-        }
-
-        // BEFORE UPDATE THE CAMPAIGN DO:
-        // 1. DELETE ALLOWED EMAILS IF ALLOWED EMAILS WE GOT IS DIFFERENT OR SOME IS MISSING FROM DATABASE
-        const allowedEmailsOld = await prisma.allowedEmail.findMany({
-            where: {
-                campaignId: id,
-            },
-        });
-
-        let allowedEmailsToDelete: any,
-            allowedEmailsToUpdate: AllowedEmail[],
-            allowedEmailsToCreate: any;
-        if (allowedEmailsOld) {
-            // SEARCH ALLOWED EMAILS THAT NOT FOUND IN ALLOWED EMAILS WE GOT
-            allowedEmailsToDelete = allowedEmailsOld.filter(
-                (allowedEmail) =>
-                    !campaignData.allowedEmails.find(
-                        (email: any) => email.id === allowedEmail.id
-                    )
-            );
-
-            // SEARCH ALLOWED EMAILS THAT HAS SAME ID BUT DIFFERENT DATA
-            allowedEmailsToUpdate = campaignData.allowedEmails.filter(
-                (email: any) =>
-                    allowedEmailsOld.find(
-                        (allowedEmail) => allowedEmail.id === email.id
-                    )
-            );
-
-            // SEARCH ALLOWED EMAILS THAT NEW DATA
-            allowedEmailsToCreate = campaignData.allowedEmails.filter(
-                (email: any) =>
-                    !allowedEmailsOld.find(
-                        (allowedEmail) => allowedEmail.email === email.email
-                    )
-            );
-        }
-
-        await prisma.$transaction(async (prismaTransaction) => {
-            // EDIT CAMPAIGN DATA
-            transactionResult = await prismaTransaction.campaign.update({
-                data: {
-                    title: campaignData.title,
-                    description: campaignData.description,
-                    expiredAt: campaignData.expiredAt,
-                    updatedAt: todayDate,
-                },
-                select: { id: true },
-                where: {
-                    id: id || undefined,
-                },
-            });
-
-            // EDIT CANDIDATE DATA
-            for (const candidate of campaignData.candidates) {
-                if (candidate.id) {
-                    // Jika id ada, update
-                    await prismaTransaction.candidate.update({
-                        where: {
-                            id: candidate.id,
-                        },
-                        data: {
-                            number: candidate.number,
-                            chief_name: candidate.chief_name,
-                            chief_instagram: candidate.chief_instagram,
-                            vice_name: candidate.vice_name,
-                            vice_instagram: candidate.vice_instagram,
-                            description: candidate.description,
-                            visi: candidate.visi,
-                            misi: candidate.misi,
-                            program: candidate.program,
-                            updatedAt: todayDate,
-                        },
-                    });
-                } else {
-                    // Jika id tidak ada, buat baru
-                    await prismaTransaction.candidate.create({
-                        data: {
-                            number: candidate.number,
-                            chief_name: candidate.chief_name,
-                            chief_instagram: candidate.chief_instagram,
-                            vice_name: candidate.vice_name,
-                            vice_instagram: candidate.vice_instagram,
-                            description: candidate.description,
-                            visi: candidate.visi,
-                            misi: candidate.misi,
-                            program: candidate.program,
-                            createdAt: todayDate,
-                            updatedAt: todayDate,
-                            campaignId: id,
-                        },
-                    });
-                }
-            }
-
-            // ADD, EDIT OR DELETE ALLOWED EMAIL DATA
-            if (allowedEmailsToDelete.length > 0) {
-                await prismaTransaction.allowedEmail.deleteMany({
-                    where: {
-                        id: {
-                            in: allowedEmailsToDelete.map(
-                                (allowedEmail: AllowedEmail) => allowedEmail.id
-                            ),
-                        },
-                    },
-                });
-            }
-
-            if (allowedEmailsToCreate.length > 0) {
-                await prismaTransaction.allowedEmail.createMany({
-                    data: allowedEmailsToCreate.map((email: any) => ({
-                        email: email.email,
-                        campaignId: id,
-                        createdAt: todayDate,
-                    })),
-                });
-            }
-
-            if (allowedEmailsToUpdate.length > 0) {
-                await Promise.all(
-                    allowedEmailsToUpdate.map(async (email: AllowedEmail) => {
-                        await prismaTransaction.allowedEmail.update({
-                            where: {
-                                id: email.id,
-                            },
-                            data: {
-                                email: email.email,
-                                updatedAt: todayDate,
-                            },
-                        });
-                    })
-                );
-            }
-        });
-
-        // EDIT RULE DATA
-        // -SOON-
-
-        // Transaksi berhasil
-        const campaignId = transactionResult.id;
-        callback({
-            status: true,
-            message: "Campaign and related entities edited successfully.",
-            data: { campaignId },
-        });
-    } catch (error) {
-        // Rollback dilakukan otomatis oleh Prisma dalam kasus kesalahan
-        console.error("Error editing campaign and related entities:", error);
-        callback({ status: false, message: error });
+    if (!campaign) {
+      // Handle case when campaign is not found
+      throw new Error("Campaign not found");
     }
+
+    // BEFORE UPDATE THE CAMPAIGN DO:
+    // 1. DELETE ALLOWED EMAILS IF ALLOWED EMAILS WE GOT IS DIFFERENT OR SOME IS MISSING FROM DATABASE
+    const allowedEmailsOld = await prisma.allowedEmail.findMany({
+      where: {
+        campaignId: id,
+      },
+    });
+
+    let allowedEmailsToDelete: any,
+      allowedEmailsToUpdate: AllowedEmail[],
+      allowedEmailsToCreate: any;
+    if (allowedEmailsOld) {
+      // SEARCH ALLOWED EMAILS THAT NOT FOUND IN ALLOWED EMAILS WE GOT
+      allowedEmailsToDelete = allowedEmailsOld.filter(
+        (allowedEmail) =>
+          !campaignData.allowedEmails.find(
+            (email: any) => email.id === allowedEmail.id
+          )
+      );
+
+      // SEARCH ALLOWED EMAILS THAT HAS SAME ID BUT DIFFERENT DATA
+      allowedEmailsToUpdate = campaignData.allowedEmails.filter((email: any) =>
+        allowedEmailsOld.find((allowedEmail) => allowedEmail.id === email.id)
+      );
+
+      // SEARCH ALLOWED EMAILS THAT NEW DATA
+      allowedEmailsToCreate = campaignData.allowedEmails.filter(
+        (email: any) =>
+          !allowedEmailsOld.find(
+            (allowedEmail) => allowedEmail.email === email.email
+          )
+      );
+    }
+
+    await prisma.$transaction(async (prismaTransaction) => {
+      // EDIT CAMPAIGN DATA
+      transactionResult = await prismaTransaction.campaign.update({
+        data: {
+          title: campaignData.title,
+          description: campaignData.description,
+          expiredAt: campaignData.expiredAt,
+          updatedAt: todayDate,
+        },
+        select: { id: true },
+        where: {
+          id: id || undefined,
+        },
+      });
+
+      // EDIT CANDIDATE DATA
+      for (const candidate of campaignData.candidates) {
+        if (candidate.id) {
+          // Jika id ada, update
+          await prismaTransaction.candidate.update({
+            where: {
+              id: candidate.id,
+            },
+            data: {
+              number: candidate.number,
+              chief_name: candidate.chief_name,
+              chief_instagram: candidate.chief_instagram,
+              vice_name: candidate.vice_name,
+              vice_instagram: candidate.vice_instagram,
+              description: candidate.description,
+              visi: candidate.visi,
+              misi: candidate.misi,
+              program: candidate.program,
+              updatedAt: todayDate,
+            },
+          });
+        } else {
+          // Jika id tidak ada, buat baru
+          await prismaTransaction.candidate.create({
+            data: {
+              number: candidate.number,
+              chief_name: candidate.chief_name,
+              chief_instagram: candidate.chief_instagram,
+              vice_name: candidate.vice_name,
+              vice_instagram: candidate.vice_instagram,
+              description: candidate.description,
+              visi: candidate.visi,
+              misi: candidate.misi,
+              program: candidate.program,
+              createdAt: todayDate,
+              updatedAt: todayDate,
+              campaignId: id,
+            },
+          });
+        }
+      }
+
+      // ADD, EDIT OR DELETE ALLOWED EMAIL DATA
+      if (allowedEmailsToDelete.length > 0) {
+        await prismaTransaction.allowedEmail.deleteMany({
+          where: {
+            id: {
+              in: allowedEmailsToDelete.map(
+                (allowedEmail: AllowedEmail) => allowedEmail.id
+              ),
+            },
+          },
+        });
+      }
+
+      if (allowedEmailsToCreate.length > 0) {
+        await prismaTransaction.allowedEmail.createMany({
+          data: allowedEmailsToCreate.map((email: any) => ({
+            email: email.email,
+            campaignId: id,
+            createdAt: todayDate,
+          })),
+        });
+      }
+
+      if (allowedEmailsToUpdate.length > 0) {
+        await Promise.all(
+          allowedEmailsToUpdate.map(async (email: AllowedEmail) => {
+            await prismaTransaction.allowedEmail.update({
+              where: {
+                id: email.id,
+              },
+              data: {
+                email: email.email,
+                updatedAt: todayDate,
+              },
+            });
+          })
+        );
+      }
+    });
+
+    // EDIT RULE DATA
+    // -SOON-
+
+    // Transaksi berhasil
+    const campaignId = transactionResult.id;
+    callback({
+      status: true,
+      message: "Campaign and related entities edited successfully.",
+      data: { campaignId },
+    });
+  } catch (error) {
+    // Rollback dilakukan otomatis oleh Prisma dalam kasus kesalahan
+    console.error("Error editing campaign and related entities:", error);
+    callback({ status: false, message: error });
+  }
 }
 
 /**
@@ -451,55 +460,55 @@ export async function editCampaign({
  * @return {Promise<void>} A promise that resolves after the campaign and associated data are deleted
  */
 export async function deleteCampaign({ id = 0 }: { id: number }) {
-    if (typeof id !== "number" || id <= 0) {
-        throw new Error("Invalid campaign ID");
-    }
+  if (typeof id !== "number" || id <= 0) {
+    throw new Error("Invalid campaign ID");
+  }
 
-    try {
-        await prisma.$transaction([
-            // 1. DELETE ALL USER VOTE CAMPAIGN
-            prisma.userVoteCampaign.deleteMany({
-                where: {
-                    campaignId: id,
-                },
-            }),
-            // 2. DELETE ALL CANDIDATES
-            prisma.candidate.deleteMany({
-                where: {
-                    campaignId: id,
-                },
-            }),
-            // 3. DELETE ALL ALLOWED EMAILS
-            prisma.allowedEmail.deleteMany({
-                where: {
-                    campaignId: id,
-                },
-            }),
-            // 4. DELETE ALL RULES
-            prisma.rule.deleteMany({
-                where: {
-                    campaignId: id,
-                },
-            }),
-            // 5. DELETE ALL NOTIFS
-            prisma.notif.deleteMany({
-                where: {
-                    campaignId: id,
-                },
-            }),
-            // 6. DELETE CAMPAIGN
-            prisma.campaign.delete({
-                where: {
-                    id,
-                },
-            }),
-        ]);
-    } catch (error) {
-        console.error("Error deleting campaign:", error);
-        throw error;
-    } finally {
-        await prisma.$disconnect();
-    }
+  try {
+    await prisma.$transaction([
+      // 1. DELETE ALL USER VOTE CAMPAIGN
+      prisma.userVoteCampaign.deleteMany({
+        where: {
+          campaignId: id,
+        },
+      }),
+      // 2. DELETE ALL CANDIDATES
+      prisma.candidate.deleteMany({
+        where: {
+          campaignId: id,
+        },
+      }),
+      // 3. DELETE ALL ALLOWED EMAILS
+      prisma.allowedEmail.deleteMany({
+        where: {
+          campaignId: id,
+        },
+      }),
+      // 4. DELETE ALL RULES
+      prisma.rule.deleteMany({
+        where: {
+          campaignId: id,
+        },
+      }),
+      // 5. DELETE ALL NOTIFS
+      prisma.notif.deleteMany({
+        where: {
+          campaignId: id,
+        },
+      }),
+      // 6. DELETE CAMPAIGN
+      prisma.campaign.delete({
+        where: {
+          id,
+        },
+      }),
+    ]);
+  } catch (error) {
+    console.error("Error deleting campaign:", error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 /**
@@ -510,224 +519,225 @@ export async function deleteCampaign({ id = 0 }: { id: number }) {
  * @return {Promise} - A promise that resolves to the updated campaign object.
  */
 export async function finishCampaign({ id = 0 }: { id: number }) {
-    if (!id && typeof id !== "number" && id <= 0) {
-        throw new Error("Invalid campaign ID");
+  if (!id && typeof id !== "number" && id <= 0) {
+    throw new Error("Invalid campaign ID");
+  }
+
+  try {
+    // FIRST GET THE USER VOTE CAMPAIGN, AND CALCULATE WHO IS THE MOST VOTED
+    // THEN SET HIM AS WINNDER_CANDIDATE ON CAMPAIGN
+    const votes = await prisma.userVoteCampaign.findMany({
+      where: {
+        campaignId: id,
+      },
+    });
+
+    // GET THE MOST VOTED
+    const candidateVotesMap = new Map<number, number>();
+
+    votes.forEach((vote) => {
+      const candidateId = vote.candidateId;
+
+      if (candidateVotesMap.has(candidateId)) {
+        candidateVotesMap.set(
+          candidateId,
+          candidateVotesMap.get(candidateId)! + 1
+        );
+      } else {
+        candidateVotesMap.set(candidateId, 1);
+      }
+    });
+
+    // FIND THE MOST VOTED CANDIDATE
+    let mostVotedCandidateId: number | null = null;
+    let maxVotes = 0;
+
+    candidateVotesMap.forEach((votes, candidateId) => {
+      if (votes > maxVotes) {
+        maxVotes = votes;
+        mostVotedCandidateId = candidateId;
+      }
+    });
+
+    // THEN FINISH AND UPDATE CAMPAIGN
+    if (mostVotedCandidateId !== null) {
+      await prisma.campaign.update({
+        where: {
+          id,
+        },
+        data: {
+          finished: true,
+          winner_candidate: mostVotedCandidateId,
+          expiredAt: new Date().toISOString(),
+        },
+      });
     }
-
-    try {
-        // FIRST GET THE USER VOTE CAMPAIGN, AND CALCULATE WHO IS THE MOST VOTED
-        // THEN SET HIM AS WINNDER_CANDIDATE ON CAMPAIGN
-        const votes = await prisma.userVoteCampaign.findMany({
-            where: {
-                campaignId: id,
-            },
-        });
-
-        // GET THE MOST VOTED
-        const candidateVotesMap = new Map<number, number>();
-
-        votes.forEach((vote) => {
-            const candidateId = vote.candidateId;
-
-            if (candidateVotesMap.has(candidateId)) {
-                candidateVotesMap.set(
-                    candidateId,
-                    candidateVotesMap.get(candidateId)! + 1
-                );
-            } else {
-                candidateVotesMap.set(candidateId, 1);
-            }
-        });
-
-        // FIND THE MOST VOTED CANDIDATE
-        let mostVotedCandidateId: number | null = null;
-        let maxVotes = 0;
-
-        candidateVotesMap.forEach((votes, candidateId) => {
-            if (votes > maxVotes) {
-                maxVotes = votes;
-                mostVotedCandidateId = candidateId;
-            }
-        });
-
-        // THEN FINISH AND UPDATE CAMPAIGN
-        if (mostVotedCandidateId !== null) {
-            await prisma.campaign.update({
-                where: {
-                    id,
-                },
-                data: {
-                    finished: true,
-                    winner_candidate: mostVotedCandidateId,
-                    expiredAt: new Date().toISOString(),
-                },
-            });
-        }
-    } catch (error) {
-        console.error("Error finishing campaign:", error);
-        throw error;
-    }
+  } catch (error) {
+    console.error("Error finishing campaign:", error);
+    throw error;
+  }
 }
 
 //! USER VOTE CAMPAIGN HERE
 export async function voteByIdCampaign({
-    campaignId = 0,
-    userId = 0,
-    candidateId = 0,
-    email = "",
-    photo,
-    callback = () => {},
+  campaignId = 0,
+  userId = 0,
+  candidateId = 0,
+  email = "",
+  photo,
+  callback = () => {},
 }: {
-    campaignId: number;
-    userId: number;
-    candidateId: number;
-    email: string;
-    photo?: string;
-    callback: Function;
+  campaignId: number;
+  userId: number;
+  candidateId: number;
+  email: string;
+  photo?: string;
+  callback: Function;
 }) {
-    if (
-        campaignId &&
-        campaignId >= 0 &&
-        userId &&
-        userId >= 0 &&
-        candidateId &&
-        candidateId >= 0 &&
-        email
-    ) {
-        const today = new Date();
-        const existingVote = await prisma.userVoteCampaign.findFirst({
-            where: {
-                AND: {
-                    campaignId,
-                    userId,
-                },
-            },
+  if (
+    campaignId &&
+    campaignId >= 0 &&
+    userId &&
+    userId >= 0 &&
+    candidateId &&
+    candidateId >= 0 &&
+    email
+  ) {
+    const today = new Date();
+    const existingVote = await prisma.userVoteCampaign.findFirst({
+      where: {
+        AND: {
+          campaignId,
+          userId,
+        },
+      },
+    });
+
+    if (!existingVote) {
+      try {
+        const userEmail = email.split("@")[1];
+        const campaign: any = await prisma.campaign.findFirst({
+          where: {
+            id: campaignId,
+          },
+          include: {
+            allowedEmails: true,
+            candidates: true,
+          },
         });
 
-        if (!existingVote) {
-            try {
-                const userEmail = email.split("@")[1];
-                const campaign: any = await prisma.campaign.findFirst({
-                    where: {
-                        id: campaignId,
-                    },
-                    include: {
-                        allowedEmails: true,
-                        candidates: true,
-                    },
-                });
-
-                if (!campaign) {
-                    throw new Error("Campaign not found");
-                }
-
-                if (!campaign.candidates) {
-                    throw new Error("Candidates not found for the campaign");
-                }
-
-                const candidateDetail: any = campaign.candidates.find(
-                    (candidate: any) => candidate.id === candidateId
-                );
-
-                if (!candidateDetail) {
-                    throw new Error("Candidate not found");
-                }
-
-                const isAllowedToVote = campaign.allowedEmails.some(
-                    (email: any) => email.email === userEmail
-                );
-
-                if (today > new Date(campaign?.expiredAt)) {
-                    return callback({
-                        status: false,
-                        message: "Campaign is expired",
-                    });
-                } else if (!isAllowedToVote) {
-                    return callback({
-                        status: false,
-                        message: "You are not allowed to vote",
-                    });
-                }
-
-                await prisma.$transaction(async (prismaTransaction) => {
-                    // Tambahkan operasi create ke dalam transaksi
-                    await prismaTransaction.userVoteCampaign.create({
-                        data: {
-                            candidateId,
-                            campaignId,
-                            userId,
-                        },
-                    });
-
-                    await prismaTransaction.notif.create({
-                        data: {
-                            campaignId,
-                            icon: "account_circle",
-                            title: `${email} vote ${String(
-                                candidateDetail.number
-                            ).padStart(2, "0")} on ${campaign.title}`,
-                            createdAt: today.toISOString(),
-                            photo,
-                        },
-                    });
-                });
-
-                callback({
-                    status: true,
-                    message: "Vote Successfully",
-                });
-            } catch (error) {
-                console.error("Error creating vote:", error);
-                callback({
-                    status: false,
-                    message: "Failed to vote",
-                });
-            }
-        } else {
-            callback({
-                status: false,
-                message: "You already vote",
-            });
+        if (!campaign) {
+          throw new Error("Campaign not found");
         }
-    } else {
-        callback({
+
+        if (!campaign.candidates) {
+          throw new Error("Candidates not found for the campaign");
+        }
+
+        const candidateDetail: any = campaign.candidates.find(
+          (candidate: any) => candidate.id === candidateId
+        );
+
+        if (!candidateDetail) {
+          throw new Error("Candidate not found");
+        }
+
+        const isAllowedToVote = campaign.allowedEmails.some(
+          (email: any) => email.email === userEmail
+        );
+
+        if (today > new Date(campaign?.expiredAt)) {
+          return callback({
             status: false,
-            message: "Please provide all required data",
+            message: "Campaign is expired",
+          });
+        } else if (!isAllowedToVote) {
+          return callback({
+            status: false,
+            message: "You are not allowed to vote",
+          });
+        }
+
+        await prisma.$transaction(async (prismaTransaction) => {
+          // Tambahkan operasi create ke dalam transaksi
+          await prismaTransaction.userVoteCampaign.create({
+            data: {
+              candidateId,
+              campaignId,
+              userId,
+            },
+          });
+
+          await prismaTransaction.notif.create({
+            data: {
+              campaignId,
+              icon: "account_circle",
+              title: `${email} vote ${String(candidateDetail.number).padStart(
+                2,
+                "0"
+              )} on ${campaign.title}`,
+              createdAt: today.toISOString(),
+              photo,
+            },
+          });
         });
+
+        callback({
+          status: true,
+          message: "Vote Successfully",
+        });
+      } catch (error) {
+        console.error("Error creating vote:", error);
+        callback({
+          status: false,
+          message: "Failed to vote",
+        });
+      }
+    } else {
+      callback({
+        status: false,
+        message: "You already vote",
+      });
     }
+  } else {
+    callback({
+      status: false,
+      message: "Please provide all required data",
+    });
+  }
 }
 
 //? NOTIFS HERE
 export async function getAllNotifs({
-    limit = 5,
-    groupedByDate = false,
+  limit = 5,
+  groupedByDate = false,
 }: {
-    limit?: number;
-    groupedByDate?: boolean;
+  limit?: number;
+  groupedByDate?: boolean;
 }) {
-    const notifsData = await prisma.notif.findMany({
-        take: limit,
+  const notifsData = await prisma.notif.findMany({
+    take: limit,
+  });
+
+  if (groupedByDate) {
+    // Mengelompokkan notifikasi berdasarkan tanggal
+    const notifsByDate: Record<string, any[]> = {};
+    // Urutkan notifikasi berdasarkan createdAt yang terbaru
+    const sortedNotifsData = notifsData.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+
+    sortedNotifsData.forEach((notif) => {
+      const dateKey = notif.createdAt.toISOString().split("T")[0];
+      notifsByDate[dateKey] = notifsByDate[dateKey] || [];
+      notifsByDate[dateKey].push(notif);
     });
 
-    if (groupedByDate) {
-        // Mengelompokkan notifikasi berdasarkan tanggal
-        const notifsByDate: Record<string, any[]> = {};
-        // Urutkan notifikasi berdasarkan createdAt yang terbaru
-        const sortedNotifsData = notifsData.sort(
-            (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-        );
-
-        sortedNotifsData.forEach((notif) => {
-            const dateKey = notif.createdAt.toISOString().split("T")[0];
-            notifsByDate[dateKey] = notifsByDate[dateKey] || [];
-            notifsByDate[dateKey].push(notif);
-        });
-
-        return notifsByDate;
-    } else {
-        // Jika tidak perlu mengelompokkan berdasarkan tanggal, kembalikan langsung notifsData
-        return notifsData;
-    }
+    return notifsByDate;
+  } else {
+    // Jika tidak perlu mengelompokkan berdasarkan tanggal, kembalikan langsung notifsData
+    return notifsData;
+  }
 }
 
 /**
@@ -739,106 +749,105 @@ export async function getAllNotifs({
  * @return {Promise<Notif[]>} A list of notifications filtered by campaign
  */
 export async function getAllNotifsByCampaign({
-    limit = 5,
-    campaignId = 0,
+  limit = 5,
+  campaignId = 0,
 }: {
-    limit?: number;
-    campaignId?: number;
+  limit?: number;
+  campaignId?: number;
 }) {
-    return await prisma.notif.findMany({
-        where: {
-            campaignId: campaignId || undefined,
-        },
-        take: limit,
-    });
+  return await prisma.notif.findMany({
+    where: {
+      campaignId: campaignId || undefined,
+    },
+    take: limit,
+  });
 }
 
 //? ALLOWED EMAILS HERE
 // CHANGE BECAUSE THIS CAN BE USED FOR INSERT AND EDIT EMAILS
 export async function changeAllowedEmails({
-    campaignId = 0,
-    emails = [],
+  campaignId = 0,
+  emails = [],
 }: {
-    campaignId: number;
-    emails: AllowedEmail[];
+  campaignId: number;
+  emails: AllowedEmail[];
 }) {
-    let transactionResult: any;
+  let transactionResult: any;
 
-    try {
-        if (!campaignId || campaignId <= 0) {
-            throw new Error("Invalid campaign ID");
-        }
-
-        // GET ALL ALLOWED EMAILS FOR THIS CAMPAIGN
-        const allowedEmails = await prisma.allowedEmail.findMany({
-            where: {
-                campaignId,
-            },
-        });
-
-        // CHECK IF THERE ARE ALLOWEDEMAILS MISSING FROM EMAILS, MEANING DELETE THE DATA THAT DOES NOT EXIST IN EMAILS
-        const deleteAllowedEmails = allowedEmails.filter(
-            (allowedEmail) =>
-                !emails.some((email) => email.id === allowedEmail.id)
-        );
-
-        const createNewAllowedEmails = emails.filter(
-            (email) => !email.id || email.id <= 0
-        );
-
-        const updateAllowedEmails = emails.filter(
-            (email) => email.id && email.id > 0
-        );
-
-        // Start a Prisma transaction
-        transactionResult = await prisma.$transaction(async (prisma) => {
-            // DELETE ALLOWED EMAILS THAT ARE NOT IN THE NEW LIST
-            await prisma.allowedEmail.deleteMany({
-                where: {
-                    id: {
-                        in: deleteAllowedEmails.map((email) => email.id),
-                    },
-                },
-            });
-
-            // CREATE NEW ALLOWED EMAILS
-            await prisma.allowedEmail.createMany({
-                data: createNewAllowedEmails.map((email) => ({
-                    email: email.email,
-                    campaignId: campaignId,
-                })),
-            });
-
-            // UPDATE EXISTING ALLOWED EMAILS
-            for (const email of updateAllowedEmails) {
-                await prisma.allowedEmail.updateMany({
-                    where: {
-                        id: email.id,
-                    },
-                    data: {
-                        email: email.email,
-                        campaignId: campaignId,
-                    },
-                });
-            }
-        });
-
-        return {
-            status: true,
-            message: "Allowed emails updated successfully.",
-        };
-    } catch (error) {
-        console.error("Error updating allowed emails:", error);
-
-        // Rollback in case of an error
-        if (transactionResult) {
-            console.log("Rollback changes...");
-            await prisma.$executeRaw`ROLLBACK;`;
-        }
-
-        return { status: false, message: "Error updating allowed emails." };
-    } finally {
-        // Disconnect Prisma client
-        await prisma.$disconnect();
+  try {
+    if (!campaignId || campaignId <= 0) {
+      throw new Error("Invalid campaign ID");
     }
+
+    // GET ALL ALLOWED EMAILS FOR THIS CAMPAIGN
+    const allowedEmails = await prisma.allowedEmail.findMany({
+      where: {
+        campaignId,
+      },
+    });
+
+    // CHECK IF THERE ARE ALLOWEDEMAILS MISSING FROM EMAILS, MEANING DELETE THE DATA THAT DOES NOT EXIST IN EMAILS
+    const deleteAllowedEmails = allowedEmails.filter(
+      (allowedEmail) => !emails.some((email) => email.id === allowedEmail.id)
+    );
+
+    const createNewAllowedEmails = emails.filter(
+      (email) => !email.id || email.id <= 0
+    );
+
+    const updateAllowedEmails = emails.filter(
+      (email) => email.id && email.id > 0
+    );
+
+    // Start a Prisma transaction
+    transactionResult = await prisma.$transaction(async (prisma) => {
+      // DELETE ALLOWED EMAILS THAT ARE NOT IN THE NEW LIST
+      await prisma.allowedEmail.deleteMany({
+        where: {
+          id: {
+            in: deleteAllowedEmails.map((email) => email.id),
+          },
+        },
+      });
+
+      // CREATE NEW ALLOWED EMAILS
+      await prisma.allowedEmail.createMany({
+        data: createNewAllowedEmails.map((email) => ({
+          email: email.email,
+          campaignId: campaignId,
+        })),
+      });
+
+      // UPDATE EXISTING ALLOWED EMAILS
+      for (const email of updateAllowedEmails) {
+        await prisma.allowedEmail.updateMany({
+          where: {
+            id: email.id,
+          },
+          data: {
+            email: email.email,
+            campaignId: campaignId,
+          },
+        });
+      }
+    });
+
+    return {
+      status: true,
+      message: "Allowed emails updated successfully.",
+    };
+  } catch (error) {
+    console.error("Error updating allowed emails:", error);
+
+    // Rollback in case of an error
+    if (transactionResult) {
+      console.log("Rollback changes...");
+      await prisma.$executeRaw`ROLLBACK;`;
+    }
+
+    return { status: false, message: "Error updating allowed emails." };
+  } finally {
+    // Disconnect Prisma client
+    await prisma.$disconnect();
+  }
 }
