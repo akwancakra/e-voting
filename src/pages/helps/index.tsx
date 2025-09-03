@@ -1,5 +1,4 @@
 import Image from "next/image";
-import BgFaq from "public/static/images/faq.svg";
 import Head from "next/head";
 import { useState } from "react";
 
@@ -181,7 +180,7 @@ export default function HelpPage() {
                 </div>
                 <div className="flex justify-center mt-10">
                   <Image
-                    src={BgFaq}
+                    src="/static/images/faq.svg"
                     alt="Help illustration"
                     className="max-w-xs"
                     width={300}

@@ -1,12 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import BgBanner from "public/static/images/landingpage.jpg";
-import BgFaq from "public/static/images/faq.svg";
 import Head from "next/head";
-import LandingPageImageOne from "public/static/images/landing-page (1).png";
-import LandingPageImageTwo from "public/static/images/landing-page (2).png";
-import LandingPageImageThree from "public/static/images/landing-page (3).png";
-import LandingPageImageFour from "public/static/images/landing-page (4).png";
 
 export default function Home() {
   return (
@@ -18,7 +12,7 @@ export default function Home() {
         <section className="relative h-screen max-h-[600px]">
           <div className="flex justify-center absolute inset-0 -z-10">
             <Image
-              src={BgBanner}
+              src="/static/images/landingpage.jpg"
               alt="Landing page banner"
               className="h-full w-full max-w-[2000px] object-cover"
               width={2000}
@@ -61,7 +55,7 @@ export default function Home() {
           <div className="sm:flex gap-4">
             <div className="relative min-h-[500px] w-full rounded-3xl mb-4 sm:mb-0 sm:min-w-[390px]">
               <Image
-                src={LandingPageImageOne}
+                src="/static/images/landing-page (1).png"
                 alt="About E-Voting"
                 className="object-cover w-full h-full rounded-3xl"
                 fill
@@ -111,7 +105,7 @@ export default function Home() {
             <div className="sm:flex sm:items-center gap-4">
               <div className="relative min-h-[500px] w-full rounded-3xl mb-3 sm:mb-0 sm:min-w-[390px]">
                 <Image
-                  src={LandingPageImageTwo}
+                  src="/static/images/landing-page (2).png"
                   alt="Step 1: Registration"
                   className="object-cover w-full h-full rounded-3xl"
                   fill
@@ -139,7 +133,7 @@ export default function Home() {
               {/* Mobile Image Step 2 */}
               <div className="relative min-h-[500px] w-full rounded-3xl block mb-3 sm:mb-0 sm:min-w-[390px] sm:hidden">
                 <Image
-                  src={LandingPageImageThree}
+                  src="/static/images/landing-page (3).png"
                   alt="Step 2: Choose Campaign"
                   className="object-cover w-full h-full rounded-3xl"
                   fill
@@ -164,7 +158,7 @@ export default function Home() {
               {/* Desktop Image Step 2 */}
               <div className="relative min-h-[500px] w-full rounded-3xl hidden sm:min-w-[390px] sm:block">
                 <Image
-                  src={LandingPageImageThree}
+                  src="/static/images/landing-page (3).png"
                   alt="Step 2: Choose Campaign"
                   className="object-cover w-full h-full rounded-3xl"
                   fill
@@ -180,7 +174,7 @@ export default function Home() {
             <div className="sm:flex sm:items-center gap-4">
               <div className="relative min-h-[500px] w-full rounded-3xl mb-3 sm:mb-0 sm:min-w-[390px]">
                 <Image
-                  src={LandingPageImageFour}
+                  src="/static/images/landing-page (4).png"
                   alt="Step 3: Vote"
                   className="object-cover w-full h-full rounded-3xl"
                   fill
@@ -295,7 +289,7 @@ export default function Home() {
               {/* IMAGE FAQ */}
               <div className="flex justify-center">
                 <Image
-                  src={BgFaq}
+                  src="/static/images/faq.svg"
                   alt="FAQ"
                   className="max-w-80"
                   width={500}
